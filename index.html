@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo Educativo para Crianças</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .game-section {
+            margin: 20px 0;
+        }
+
+        .question {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 1em;
+            margin-right: 10px;
+        }
+
+        .confetti-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            animation: fall 2s linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100%); opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        .sad-face {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4em;
+        }
+
+        .happy-dance {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+        }
+
+        .happy-face {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Jogo Educativo para Iana</h1>
+        <div class="game-section" id="silaba-game">
+            <h2>Junte as Sílabas</h2>
+            <div class="question" id="silaba-question">Qual é a palavra?</div>
+            <div class="options" id="silaba-options">
+                <!-- Botões de sílabas irão aqui -->
+            </div>
+            <input type="text" id="silaba-answer" placeholder="Digite a palavra">
+            <button onclick="checkSyllableAnswer()">Verificar</button>
+        </div>
+
+        <div class="game-section" id="math-game">
+            <h2>Continhas de Somar e Subtrair</h2>
+            <div class="question" id="math-question">Quanto é 2 + 3?</div>
+            <input type="number" id="math-answer" placeholder="Resposta">
+            <button onclick="checkMathAnswer()">Verificar</button>
+        </div>
+
+        <div class="confetti-container" id="confetti-container"></div>
+        <div class="sad-face" id="sad-face">😢</div>
+        <img src="https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif" alt="Happy Dance" class="happy-dance" id="happy-dance">
+        <div class="happy-face" id="happy-face">😄</div>
+    </div>
+
+    <script>
+        // Variáveis globais
+        const syllables = [
+            { word: "barata", parts: ["ba", "ra", "ta"] },
+            { word: "batata", parts: ["ba", "ta", "ta"] },
+            { word: "sapato", parts: ["sa", "pa", "to"] },
+            { word: "celular", parts: ["ce", "lu", "lar"] },
+            { word: "cerveja", parts: ["cer", "ve", "ja"] },
+            { word: "irmão", parts:
+            ["ir", "mão"] },
+            { word: "mamãe", parts: ["ma", "mãe"] },
+            { word: "papai", parts: ["pa", "pai"] },
+            { word: "cachorro", parts: ["ca", "cho", "rro"] }
+        ];
+
+        const mathQuestions = [
+            { question: "Quanto é 2 + 3?", answer: 5 },
+            { question: "Quanto é 4 + 2?", answer: 6 },
+            { question: "Quanto é 1 + 7?", answer: 8 },
+            { question: "Quanto é 3 + 5?", answer: 8 },
+            { question: "Quanto é 6 + 1?", answer: 7 },
+            { question: "Quanto é 5 - 2?", answer: 3 },
+            { question: "Quanto é 9 - 4?", answer: 5 },
+            { question: "Quanto é 8 - 3?", answer: 5 },
+            { question: "Quanto é 7 - 1?", answer: 6 },
+            { question: "Quanto é 10 - 6?", answer: 4 }
+        ];
+
+        let currentSyllableIndex = 0;
+        let currentMathIndex = 0;
+
+        // Função para gerar confetes
+        function generateConfetti() {
+            const confettiContainer = document.getElementById("confetti-container");
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement("div");
+                confetti.className = "confetti";
+                confetti.style.backgroundColor = getRandomColor();
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                confettiContainer.appendChild(confetti);
+            }
+            setTimeout(() => confettiContainer.innerHTML = '', 3000);  // Limpar confetes após 3 segundos
+        }
+
+        // Função para obter uma cor aleatória
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        // Função para mostrar carinha triste
+        function showSadFace() {
+            const sadFace = document.getElementById("sad-face");
+            sadFace.style.display = "block";
+            setTimeout(() => sadFace.style.display = "none", 2000);  // Esconder carinha triste após 2 segundos
+        }
+
+        // Função para mostrar dança feliz
+        function showHappyDance() {
+            const happyDance = document.getElementById("happy-dance");
+            happyDance.style.display = "block";
+            setTimeout(() => happyDance.style.display = "none", 2000);  // Esconder dança feliz após 2 segundos
+        }
+
+        // Função para mostrar carinha feliz
+        function showHappyFace() {
+            const happyFace = document.getElementById("happy-face");
+            happyFace.style.display = "block";
+            setTimeout(() => happyFace.style.display = "none", 2000);  // Esconder carinha feliz após 2 segundos
+        }
+
+        // Função para verificar resposta de sílabas
+        function checkSyllableAnswer() {
+            const answer = document.getElementById("silaba-answer").value.trim().toLowerCase();
+            const currentWord = syllables[currentSyllableIndex];
+            if (answer === currentWord.word) {
+                generateConfetti();
+                showHappyDance();
+                showHappyFace();
+                currentSyllableIndex++;
+                if (currentSyllableIndex < syllables.length) {
+                    loadSyllableQuestion();
+                } else {
+                    document.getElementById("silaba-question").textContent = "Você completou todas as palavras!";
+                    document.getElementById("silaba-options").innerHTML = "";
+                    document.getElementById("silaba-answer").style.display = "none";
+                    document.getElementById("silaba-answer").nextElementSibling.style.display = "none";
+                }
+            } else {
+                showSadFace();
+            }
+        }
+
+        // Função para verificar resposta de matemática
+        function checkMathAnswer() {
+            const answer = document.getElementById("math-answer").value;
+            if (parseInt(answer) === mathQuestions[currentMathIndex].answer) {
+                generateConfetti();
+                showHappyDance();
+                showHappyFace();
+                currentMathIndex++;
+                if (currentMathIndex < mathQuestions.length) {
+                    loadMathQuestion();
+                } else {
+                    document.getElementById("math-question").textContent = "Você completou todas as questões!";
+                    document.getElementById("math-answer").style.display = "none";
+                    document.getElementById("math-answer").nextElementSibling.style.display = "none";
+                }
+            } else {
+                showSadFace();
+            }
+        }
+
+        // Carrega a questão de sílabas atual
+        function loadSyllableQuestion() {
+            const currentWord = syllables[currentSyllableIndex];
+            document.getElementById("silaba-question").textContent = "Forme a palavra:";
+            const optionsDiv = document.getElementById("silaba-options");
+            optionsDiv.innerHTML = "";
+            currentWord.parts.forEach(part => {
+                const button = document.createElement("button");
+                button.textContent = part;
+                optionsDiv.appendChild(button);
+            });
+            document.getElementById("silaba-answer").value = "";
+        }
+
+        // Carrega a questão de matemática atual
+        function loadMathQuestion() {
+            document.getElementById("math-question").textContent = mathQuestions[currentMathIndex].question;
+            document.getElementById("math-answer").value = "";
+        }
+
+        // Inicializa o jogo
+        function init() {
+            loadSyllableQuestion();
+            loadMathQuestion();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
